@@ -11,17 +11,19 @@ from rl.policies.eps_greedy import EpsGreedy
 
 
 class DqnAgent():
-    def __init__(self, state_dim, action_dim, lr=1e-3, l2_reg=1e-3, hidden_layers=None, activation=F.relu, gamma=1.0,
-                 **eps_params):
-        self.state_dim = state_dim
-        self.action_dim = action_dim
-
+    def __init__(self, state_dim, action_dim, lr=1e-4, l2_reg=1e-3, hidden_layers=None, activation=F.relu, gamma=1.0,
+                 double=True, duel=True, loss_fct=F.mse_loss, **eps_params):
         if hidden_layers is None:
             hidden_layers = [32, 32]
-        self.gamma = gamma
 
-        self.dqn = DQN(self.state_dim, self.action_dim, hidden_layers, activation=activation)
-        self.dqn_target = DQN(self.state_dim, self.action_dim, hidden_layers, activation=activation)
+        self.state_dim = state_dim
+        self.action_dim = action_dim
+        self.gamma = gamma
+        self.double = double
+        self.loss_fct = loss_fct
+
+        self.dqn = DQN(self.state_dim, self.action_dim, hidden_layers, activation=activation, duel=duel)
+        self.dqn_target = DQN(self.state_dim, self.action_dim, hidden_layers, activation=activation, duel=duel)
         self.dqn_target.load_state_dict(self.dqn.state_dict())
         self.dqn_target.eval()
 
@@ -38,7 +40,7 @@ class DqnAgent():
             obs_t = obs_t.cuda()
 
         q = self.dqn.forward(obs_t)
-        max_q, action = torch.max(q, 0)
+        max_q, action = q.max(0)
         return action.data.cpu().numpy()
 
     def optimize(self, batch):
@@ -60,18 +62,21 @@ class DqnAgent():
     def step(self, states, actions, rewards, next_states, masks):
         state_action_values = self.dqn(states).gather(1, actions.unsqueeze(1))
 
-        next_state_values = self.dqn_target(next_states).max(1)[0].detach()
+        if self.double:
+            pred_actions = self.dqn(next_states).max(1)[1]
+            next_state_values = self.dqn_target(next_states).gather(1, pred_actions.unsqueeze(1)).view(-1).detach()
+        else:
+            next_state_values = self.dqn_target(next_states).max(1)[0].detach()
+        pred_state_action_values = rewards + self.gamma * next_state_values * masks
 
-        pred_state_action_values = (next_state_values * masks * self.gamma) + rewards
+        # Original deepmind paper suggests to use Huber loss instead of MSE.
+        loss = self.loss_fct(state_action_values, pred_state_action_values.unsqueeze(1))
 
-        # Compute Huber loss
-        loss = F.smooth_l1_loss(state_action_values, pred_state_action_values.unsqueeze(1))
-
-        # Optimize the model
+        # Backpropagation step
         self.optimizer.zero_grad()
         loss.backward()
-        for param in self.dqn.parameters():
-            param.grad.data.clamp_(-1, 1)
+        # for param in self.dqn.parameters():
+        #     param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
 
     def update_target(self):

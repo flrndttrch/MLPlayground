@@ -1,27 +1,33 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+from rl.models.mlp import MLP
 
-class DQN(nn.Module):
 
-    def __init__(self, input_dim, output_dim, hidden_layers=None, duel=True, activation=F.relu):
-        super(DQN, self).__init__()
+class DQN(MLP):
+
+    def __init__(self, state_dim, action_dim, hidden_layers=None, duel=True, activation=F.relu):
+        super(DQN, self).__init__(input_dim=state_dim, output_dim=action_dim, hidden_layers=hidden_layers,
+                                  activation=activation)
         self.activation = activation
-        self.input_dim = input_dim
-        self.output_dim = output_dim
+        self.state_dim = state_dim
+        self.action_dim = action_dim
+        self.duel = duel
 
-        if not hidden_layers:
-            hidden_layers = [32, 32]
-
-        self.linear = nn.ModuleList()
-        prev_layer = self.input_dim
-        for layer in hidden_layers:
-            # TODO: insert duel architecture
-            self.linear.append(nn.Linear(prev_layer, layer))
-            prev_layer = layer
-        self.output = nn.Linear(prev_layer, self.output_dim)
+        if self.duel:
+            self.adv_layer1 = nn.Linear(self.prev_layer, self.prev_layer)
+            self.adv_layer2 = nn.Linear(self.prev_layer, self.action_dim)
+            self.val_layer1 = nn.Linear(self.prev_layer, self.prev_layer)
+            self.val_layer2 = nn.Linear(self.prev_layer, 1)
 
     def forward(self, x):
         for l in self.linear:
             x = self.activation(l(x))
-        return self.output(x)
+
+        if self.duel:
+            adv = self.adv_layer2(self.activation(self.adv_layer1(x)))
+            val = self.val_layer2(self.activation(self.val_layer1(x)))
+
+            return val + adv - adv.mean()
+        else:
+            return self.output(x)

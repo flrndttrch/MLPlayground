@@ -44,6 +44,6 @@ class ReplayBuffer(BaseMemory):
     def __len__(self):
         return len(self.memory)
 
-class PrioritizedReplayBuffer():
+class PrioritizedReplayBuffer(BaseMemory):
     def __init__(self, capacity):
         pass
