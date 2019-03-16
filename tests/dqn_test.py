@@ -16,7 +16,7 @@ class TestDqn(unittest.TestCase):
         env = gym.make(env_str)
         env.seed(seed)
 
-        params = dict(seed=seed, max_steps=100, double=False, duel=False)
+        params = dict(seed=seed, max_steps=100, double=False, duel=False, mem_type=None)
 
         training = DqnTraining(env, **params)
         training.train()
@@ -28,7 +28,7 @@ class TestDqn(unittest.TestCase):
         env = gym.make(env_str)
         env.seed(seed)
 
-        params = dict(seed=seed, max_steps=100, double=True, duel=False)
+        params = dict(seed=seed, max_steps=100, double=True, duel=False, mem_type=None)
 
         training = DqnTraining(env, **params)
         training.train()
@@ -40,7 +40,19 @@ class TestDqn(unittest.TestCase):
         env = gym.make(env_str)
         env.seed(seed)
 
-        params = dict(seed=seed, max_steps=100, double=False, duel=True)
+        params = dict(seed=seed, max_steps=100, double=False, duel=True, mem_type=None)
+
+        training = DqnTraining(env, **params)
+        training.train()
+
+    def test_per_dqn(self):
+        env_str = "CartPole-v0"
+        print("\nRunning DQN with PER on {}".format(env_str))
+        seed = 123
+        env = gym.make(env_str)
+        env.seed(seed)
+
+        params = dict(seed=seed, max_steps=100, double=False, duel=False, mem_type='per')
 
         training = DqnTraining(env, **params)
         training.train()

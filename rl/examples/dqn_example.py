@@ -18,15 +18,15 @@ def run_dqn_example(env_str):
     env.seed(seed)
 
     params = dict(seed=seed, max_steps=10000, batch_size=32, mem_size=10000, learning_starts=1, learning_freq=1,
-                  target_update=500, lr=1e-3, l2_reg=1e-3, hidden_layers=[32, 32], gamma=1.0, double=True,
-                  duel=True, loss_fct=F.mse_loss, eps_decay = .0002, eps_init = 1., eps_min = 0.02)
+                  target_update=500, lr=1e-3, l2_reg=1e-3, hidden_layers=[32, 32], gamma=1.0, double=False,
+                  duel=False, mem_type='per', loss_fct=F.mse_loss, eps_decay = .0002, eps_init = 1., eps_min = 0.02)
 
     Logger.print_params(params)
 
     training = DqnTraining(env, **params)
     training.train()
 
-    training.logger.plot_return("DQN")
+    training.logger.plot_return("DQN on {}".format(env_str))
 
 
 if __name__ == '__main__':
