@@ -10,8 +10,16 @@ from rl.memory.memory import PrioritizedReplayBuffer, ReplayBuffer
 from rl.models.dqn import DQN
 from rl.policies.eps_greedy import EpsGreedy
 
+class Agent:
 
-class DqnAgent():
+    def act(self, obs, t):
+        pass
+
+    def optimize(self, batch_size):
+        pass
+
+
+class DqnAgent(Agent):
     def __init__(self, state_dim, action_dim, lr=1e-4, l2_reg=1e-3, hidden_layers=None, activation=F.relu, gamma=1.0,
                  double=True, duel=True, loss_fct=F.mse_loss, mem_size=10000, mem_type='per', **eps_params):
         if hidden_layers is None:

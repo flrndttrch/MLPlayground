@@ -3,7 +3,7 @@ import unittest
 import gym
 import torch
 
-from rl.training.dqn_training import DqnTraining
+from rl.training.training import OffPolicyTraining
 
 torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
@@ -18,7 +18,7 @@ class TestDqn(unittest.TestCase):
 
         params = dict(seed=seed, max_steps=100, double=False, duel=False, mem_type=None)
 
-        training = DqnTraining(env, **params)
+        training = OffPolicyTraining(env, **params)
         training.train()
 
     def test_double_dqn(self):
@@ -30,7 +30,7 @@ class TestDqn(unittest.TestCase):
 
         params = dict(seed=seed, max_steps=100, double=True, duel=False, mem_type=None)
 
-        training = DqnTraining(env, **params)
+        training = OffPolicyTraining(env, **params)
         training.train()
 
     def test_duel_dqn(self):
@@ -42,7 +42,7 @@ class TestDqn(unittest.TestCase):
 
         params = dict(seed=seed, max_steps=100, double=False, duel=True, mem_type=None)
 
-        training = DqnTraining(env, **params)
+        training = OffPolicyTraining(env, **params)
         training.train()
 
     def test_per_dqn(self):
@@ -54,7 +54,7 @@ class TestDqn(unittest.TestCase):
 
         params = dict(seed=seed, max_steps=100, double=False, duel=False, mem_type='per')
 
-        training = DqnTraining(env, **params)
+        training = OffPolicyTraining(env, **params)
         training.train()
 
 
